@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EquiData Global - Decision Support System</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -27,7 +24,6 @@
 </head>
 <body class="flex h-screen overflow-hidden text-sm">
 
-    <!-- SIDEBAR -->
     <aside class="w-64 glass-panel flex flex-col border-r border-slate-700/50 hidden md:flex z-20 shadow-2xl">
         <div class="p-6 border-b border-slate-700/50 flex items-center gap-3">
             <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20">
@@ -40,6 +36,26 @@
         </div>
 
         <div class="p-5 flex-grow overflow-y-auto space-y-6">
+            
+            <div class="bg-slate-800/60 border border-slate-600/50 p-4 rounded-xl space-y-3 shadow-inner">
+                <h4 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                    <i data-lucide="database" class="w-4 h-4 text-indigo-400"></i> Gestor de Datos
+                </h4>
+                
+                <div id="statusBadge" class="inline-flex items-center gap-2 text-[10px] bg-slate-700 text-slate-400 px-2 py-1.5 rounded-lg border border-slate-600 w-full justify-center transition-all">
+                    <span class="w-2 h-2 rounded-full bg-slate-500"></span> Conectando...
+                </div>
+                
+                <input type="file" id="fileInput" accept=".csv" class="hidden" />
+                <button id="uploadBtn" class="w-full bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg transition-colors border border-indigo-500/50 flex items-center justify-center gap-2 shadow-lg">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Cargar CSV Temporal
+                </button>
+                
+                <button id="resetBtn" class="w-full bg-slate-700 hover:bg-rose-900/50 hover:text-rose-300 text-slate-300 text-xs font-bold py-2 rounded-lg transition-all border border-slate-600 hover:border-rose-500/50 flex items-center justify-center gap-2 hidden">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Restaurar Base Inicial
+                </button>
+            </div>
+
             <div>
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Parámetros Estratégicos</h3>
                 <div class="space-y-4">
@@ -51,7 +67,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] text-slate-400 mb-1 uppercase">Zoom-In Subnacional</label>
-                        <select id="filtroProvincia" class="w-full bg-slate-800/50 border border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        <select id="filtroProvincia" class="w-full bg-slate-800/50 border border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                             <option value="Todas">Todas las Zonas</option>
                         </select>
                     </div>
@@ -63,36 +79,24 @@
                     </div>
                 </div>
             </div>
-
-            <div class="bg-indigo-900/30 border border-indigo-500/20 p-4 rounded-xl">
-                <h4 class="text-xs font-bold text-indigo-300 mb-2 flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4"></i> Motor Causal</h4>
-                <p class="text-[10px] text-indigo-200/70 mb-3">Sube el dataset <i>equidata_latam_inteligente</i> para activar cruces socioeconómicos.</p>
-                <input type="file" id="fileInput" accept=".csv" class="hidden" />
-                <button id="uploadBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg transition-colors shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
-                    <i data-lucide="database" class="w-4 h-4"></i> Ingestar Datos
-                </button>
-            </div>
         </div>
+
         <div class="p-4 border-t border-slate-700/50 text-center">
-            <p class="text-[10px] text-slate-500">Módulo Analítico Avanzado v2.0</p>
+            <p class="text-[10px] text-slate-500">Módulo Analítico Avanzado v2.4</p>
         </div>
     </aside>
 
-    <!-- MAIN DASHBOARD -->
     <main class="flex-1 flex flex-col overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-900">
         
-        <!-- TOP NAVBAR MOBILE -->
         <header class="md:hidden glass-panel p-4 flex justify-between items-center z-20">
-            <h1 class="font-bold text-lg">EquiData</h1>
+            <h1 class="font-bold text-lg text-white">EquiData DSS</h1>
             <button class="text-slate-300"><i data-lucide="menu"></i></button>
         </header>
 
         <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6">
             
-            <!-- SECCIÓN 1: KPIs DESCRIPTIVOS E INTELIGENTES -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 
-                <!-- KPI 1: Prevalencia -->
                 <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-indigo-500/50 transition-colors">
                     <div class="absolute -right-6 -top-6 opacity-10 group-hover:scale-110 transition-transform"><i data-lucide="activity" class="w-32 h-32 text-indigo-500"></i></div>
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Tasa Prevalencia</p>
@@ -100,7 +104,6 @@
                     <p class="text-[10px] text-slate-500">Exposición (OMS/Encuestas)</p>
                 </div>
 
-                <!-- KPI 2: Letalidad -->
                 <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-rose-500/50 transition-colors border-b-2 border-b-rose-500">
                     <div class="absolute -right-6 -top-6 opacity-10 group-hover:scale-110 transition-transform"><i data-lucide="skull" class="w-32 h-32 text-rose-500"></i></div>
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Impacto Letal</p>
@@ -108,7 +111,6 @@
                     <p class="text-[10px] text-slate-500">Femicidios Acumulados</p>
                 </div>
 
-                <!-- KPI 3: Tendencia General -->
                 <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group transition-colors">
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Variación Interanual (Δ)</p>
                     <div class="flex items-end gap-2 mb-1">
@@ -118,7 +120,6 @@
                     <p id="txtTendencia" class="text-[10px] text-slate-500">Respecto al periodo anterior</p>
                 </div>
 
-                <!-- KPI 4: Respuesta Institucional -->
                 <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-emerald-500/50 transition-colors">
                     <div class="absolute -right-6 -top-6 opacity-10 group-hover:scale-110 transition-transform"><i data-lucide="scale" class="w-32 h-32 text-emerald-500"></i></div>
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Respuesta Institucional</p>
@@ -126,7 +127,6 @@
                     <p class="text-[10px] text-slate-500">Atenciones vs Emergencias</p>
                 </div>
 
-                <!-- KPI 5: Alertas Tempranas -->
                 <div id="cardAlerta" class="glass-panel p-5 rounded-2xl relative overflow-hidden transition-all duration-500">
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1 flex justify-between">
                         Zonas en Riesgo <i id="iconAlerta" data-lucide="siren" class="w-4 h-4 text-slate-500"></i>
@@ -137,7 +137,6 @@
 
             </div>
 
-            <!-- SECCIÓN 2: INSIGHTS ALGORÍTMICOS -->
             <div class="bg-gradient-to-r from-indigo-900/80 to-slate-900/80 border border-indigo-500/30 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row gap-4 items-center">
                 <div class="p-4 bg-indigo-500/20 rounded-full animate-pulse shrink-0">
                     <i data-lucide="brain-circuit" class="w-8 h-8 text-indigo-400"></i>
@@ -145,15 +144,13 @@
                 <div class="w-full">
                     <h2 class="text-sm font-bold text-indigo-300 uppercase tracking-widest mb-2">Interpretación del Modelo DSS</h2>
                     <ul id="panelInsights" class="text-sm text-slate-300 space-y-2 list-disc ml-5 marker:text-indigo-500">
-                        <li>Esperando ingesta de datos para procesar correlaciones...</li>
+                        <li>Cargando motor de datos...</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- SECCIÓN 3: GRÁFICOS ANALÍTICOS -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <!-- Gráfico 1: Evolución Temporal -->
                 <div class="glass-panel rounded-2xl p-5 lg:col-span-2 flex flex-col">
                     <div class="flex justify-between items-start mb-4">
                         <div>
@@ -166,7 +163,6 @@
                     </div>
                 </div>
 
-                <!-- Gráfico 2: Tipos de Violencia -->
                 <div class="glass-panel rounded-2xl p-5 flex flex-col">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1"><i data-lucide="pie-chart" class="w-4 h-4 text-pink-400"></i> Distribución por Tipo</h3>
                     <p class="text-xs text-slate-400 mb-4">Composición de las denuncias/casos.</p>
@@ -175,7 +171,6 @@
                     </div>
                 </div>
 
-                <!-- Gráfico 3: Edades -->
                 <div class="glass-panel rounded-2xl p-5 lg:col-span-1 flex flex-col">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1"><i data-lucide="target" class="w-4 h-4 text-amber-400"></i> Vulnerabilidad Demográfica</h3>
                     <p class="text-xs text-slate-400 mb-4">Grupos de edad afectados.</p>
@@ -184,7 +179,6 @@
                     </div>
                 </div>
 
-                <!-- Gráfico 4: Correlación Socioeconómica -->
                 <div class="glass-panel rounded-2xl p-5 lg:col-span-2 flex flex-col">
                     <div class="flex justify-between items-start mb-4">
                         <div>
@@ -202,11 +196,10 @@
 
             </div>
 
-            <!-- SECCIÓN 4: DATA LAKE INTERACTIVO -->
             <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
                 <div class="p-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="table" class="w-4 h-4 text-slate-400"></i> Repositorio de Datos (Data Lake)</h3>
-                    <span id="tablaCount" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full">0 registros</span>
+                    <span id="tablaCount" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full border border-slate-600">0 registros</span>
                 </div>
                 <div class="overflow-x-auto max-h-[300px]">
                     <table class="w-full text-left whitespace-nowrap text-xs text-slate-300">
@@ -222,8 +215,7 @@
                             </tr>
                         </thead>
                         <tbody id="tablaBody" class="divide-y divide-slate-800/50">
-                            <!-- Filas inyectadas por JS -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
@@ -231,26 +223,46 @@
         </div>
     </main>
 
-    <!-- SCRIPTS -->
     <script>
         lucide.createIcons();
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
-        let globalData = [
-            { Pais: 'Promedio LATAM', Provincia_Dpto: 'Global', Anio: 2023, Mes: '', Grupo_Edad: '15+ años', Tipo_Violencia: 'Violencia de Pareja', Indicador: 'Prevalencia', Valor: 12.5, 'Tendencia_%': -1.2, Alerta_Riesgo: '🟢 MEJORA', Categoria_KPI: 'Benchmark Global', Fuente: 'Sistema' },
-            { Pais: 'República Dominicana', Provincia_Dpto: 'Nacional', Anio: 2023, Mes: '', Grupo_Edad: 'Todas las edades', Tipo_Violencia: 'Feminicidio (Violencia Letal)', Indicador: 'Femicidios', Valor: 78, 'Tendencia_%': -5.2, Alerta_Riesgo: '🟢 MEJORA', Categoria_KPI: '2. Letalidad', Fuente: 'CEPAL' },
-            { Pais: 'República Dominicana', Provincia_Dpto: 'Nacional (RD)', Anio: 2024, Mes: 1, Grupo_Edad: 'Todas las edades', Tipo_Violencia: 'Llamadas de Emergencia', Indicador: 'Línea 212', Valor: 413, 'Tendencia_%': 2.1, Alerta_Riesgo: '🟡 ESTABLE', Categoria_KPI: '3. Alertas Tempranas', Fuente: 'RD' },
-            { Pais: 'México', Provincia_Dpto: 'Jalisco', Anio: 2021, Mes: '', Grupo_Edad: '15+ años', Tipo_Violencia: 'Violencia General', Indicador: 'Registros ENDIREH', Valor: 3367, 'Tendencia_%': 22.4, Alerta_Riesgo: '🔴 CRÍTICA: Fuerte Aumento', Categoria_KPI: '1. Prevalencia Local', Fuente: 'INEGI' },
-            { Pais: 'Colombia', Provincia_Dpto: 'Nacional', Anio: 2022, Mes: '', Grupo_Edad: 'Todas las edades', Tipo_Violencia: 'Socioeconómico', Indicador: 'Desempleo Femenino', Valor: 15.2, 'Tendencia_%': 3.1, Alerta_Riesgo: '🟡 ESTABLE', Categoria_KPI: 'Correlación Socio-Económica', Fuente: 'World Bank' }
-        ];
+        let defaultGlobalData = []; 
+        let globalData = [];        
 
         const selPais = document.getElementById('filtroPais');
         const selProv = document.getElementById('filtroProvincia');
         const selAnio = document.getElementById('filtroAnio');
         let chartEvRef, chartTiposRef, chartEdadRef, chartCorrRef;
 
-        // INICIALIZACIÓN
+        // --- SISTEMA HÍBRIDO DE CARGA DE DATOS ---
+        function cargarCSVAutomatico() {
+            const rutaArchivoCSV = 'equidata_latam_inteligente.csv'; 
+
+            fetch(rutaArchivoCSV)
+                .then(response => {
+                    if (!response.ok) throw new Error("No se pudo cargar el archivo CSV");
+                    return response.text();
+                })
+                .then(textoCSV => {
+                    const csvData = parseCSVRobust(textoCSV); 
+                    if(csvData.length > 0) {
+                        defaultGlobalData = [...csvData]; 
+                        globalData = [...csvData];        
+                        initSystem(); 
+                        actualizarInterfaz('default', csvData.length);
+                    } else {
+                        throw new Error("Archivo vacío");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error al cargar el CSV automáticamente:", error);
+                    document.getElementById('panelInsights').innerHTML = `<li><span class="text-amber-400 font-bold">Aviso:</span> No se detectó la base de datos automática. Por favor, sube un CSV manualmente usando el botón izquierdo.</li>`;
+                    actualizarInterfaz('error', 0);
+                });
+        }
+
         document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
         
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -260,23 +272,53 @@
             reader.onload = (ev) => {
                 const csvData = parseCSVRobust(ev.target.result);
                 if(csvData.length > 0) {
-                    globalData = csvData;
-                    alert(`Dataset ingestado correctamente: ${csvData.length} registros cargados.`);
+                    globalData = [...csvData]; 
                     initSystem();
+                    actualizarInterfaz('temp', csvData.length);
                 } else {
-                    alert("Error: El archivo está vacío o el formato no es compatible.");
+                    alert("Error: El archivo temporal está vacío o corrupto.");
                 }
             };
             reader.readAsText(file);
         });
 
-        // PARSER DE CSV ROBUSTO (Soluciona el problema de los campos vacíos y espacios)
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if(defaultGlobalData.length > 0) {
+                globalData = [...defaultGlobalData]; 
+                document.getElementById('fileInput').value = ''; 
+                initSystem();
+                actualizarInterfaz('default', globalData.length);
+            } else {
+                cargarCSVAutomatico();
+            }
+        });
+
+        function actualizarInterfaz(estado, count) {
+            const badge = document.getElementById('statusBadge');
+            const resetBtn = document.getElementById('resetBtn');
+            document.getElementById('tablaCount').innerText = `${count} registros activos`;
+
+            if(estado === 'default') {
+                badge.className = "inline-flex items-center gap-2 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1.5 rounded-lg border border-emerald-500/30 w-full justify-center transition-all";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Matriz Inicial Activa`;
+                resetBtn.classList.add('hidden');
+            } else if (estado === 'temp') {
+                badge.className = "inline-flex items-center gap-2 text-[10px] bg-amber-500/20 text-amber-400 px-2 py-1.5 rounded-lg border border-amber-500/30 w-full justify-center transition-all";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Modo Datos Temporales`;
+                resetBtn.classList.remove('hidden');
+            } else {
+                badge.className = "inline-flex items-center gap-2 text-[10px] bg-rose-500/20 text-rose-400 px-2 py-1.5 rounded-lg border border-rose-500/30 w-full justify-center transition-all";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> Sin Datos / Error`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', cargarCSVAutomatico);
+
         function parseCSVRobust(texto) {
             const result = [];
             const lines = texto.split(/\r?\n/);
             if(lines.length < 2) return [];
             
-            // Extraer cabeceras limpias
             const headers = lines[0].split(',').map(h => h.replace(/(^"|"$)/g, '').trim());
             
             for(let i = 1; i < lines.length; i++) {
@@ -287,7 +329,6 @@
                 let inQuotes = false;
                 let currentVal = '';
                 
-                // Leer carácter por carácter para respetar comas dentro de comillas y celdas vacías
                 for(let j = 0; j < line.length; j++) {
                     const char = line[j];
                     if(char === '"') {
@@ -299,20 +340,18 @@
                         currentVal += char;
                     }
                 }
-                row.push(currentVal); // Añadir el último valor de la línea
+                row.push(currentVal); 
                 
                 let obj = {};
                 headers.forEach((h, idx) => {
                     let v = row[idx] ? row[idx].replace(/(^"|"$)/g, '').trim() : '';
                     if(['Valor', 'Anio', 'Mes', 'Tendencia_%'].includes(h)) {
-                        // Validar si es un número real, de lo contrario dejar como nulo
                         obj[h] = (v !== '' && !isNaN(parseFloat(v))) ? parseFloat(v) : null;
                     } else {
                         obj[h] = v;
                     }
                 });
                 
-                // Asegurarse de que sea una fila válida de datos (tiene que tener País)
                 if(obj.Pais && obj.Pais !== '') {
                     result.push(obj);
                 }
@@ -324,40 +363,86 @@
             poblarFiltros();
             actualizarDSS();
 
-            selPais.addEventListener('change', () => { poblarProvincia(); actualizarDSS(); });
-            selProv.addEventListener('change', actualizarDSS);
-            selAnio.addEventListener('change', actualizarDSS);
+            selPais.replaceWith(selPais.cloneNode(true));
+            selProv.replaceWith(selProv.cloneNode(true));
+            selAnio.replaceWith(selAnio.cloneNode(true));
+            
+            const newSelPais = document.getElementById('filtroPais');
+            const newSelProv = document.getElementById('filtroProvincia');
+            const newSelAnio = document.getElementById('filtroAnio');
+
+            // Cuando cambia el país, actualizamos las provincias disponibles en cascada
+            newSelPais.addEventListener('change', () => { poblarProvincia(); actualizarDSS(); });
+            newSelProv.addEventListener('change', actualizarDSS);
+            newSelAnio.addEventListener('change', actualizarDSS);
         }
 
         function poblarFiltros() {
             const baseData = globalData.filter(d => d.Pais !== 'Promedio LATAM');
-            const paises = ['Todos', ...new Set(baseData.map(d=>d.Pais).filter(Boolean))].sort();
-            const anios = ['Todos', ...new Set(baseData.map(d=>d.Anio).filter(Boolean))].sort((a,b)=>b-a);
             
-            selPais.innerHTML = paises.map(p => `<option value="${p}">${p==='Todos'?'Global LATAM':p}</option>`).join('');
-            selAnio.innerHTML = anios.map(a => `<option value="${a}">${a==='Todos'?'Histórico Completo':a}</option>`).join('');
-            poblarProvincia();
+            const paisesUnicos = [...new Set(baseData.map(d=>d.Pais).filter(Boolean))].sort();
+            const aniosUnicos = [...new Set(baseData.map(d=>d.Anio).filter(Boolean))].sort((a,b)=>b-a);
+            
+            const paises = ['Todos', ...paisesUnicos];
+            const anios = ['Todos', ...aniosUnicos];
+            
+            const currentSelPais = document.getElementById('filtroPais');
+            const currentSelAnio = document.getElementById('filtroAnio');
+
+            currentSelPais.innerHTML = paises.map(p => `<option value="${p}">${p==='Todos'?'Global LATAM':p}</option>`).join('');
+            currentSelAnio.innerHTML = anios.map(a => `<option value="${a}">${a==='Todos'?'Histórico Completo':a}</option>`).join('');
+            
+            currentSelPais.value = 'Todos';
+            currentSelAnio.value = 'Todos';
+            
+            poblarProvincia(); // Llamamos a la cascada inicial
         }
 
+        // --- LÓGICA DE CASCADA ESTRICTA PARA PROVINCIAS ---
         function poblarProvincia() {
-            const pais = selPais.value;
-            let dProv = globalData.filter(d => d.Pais !== 'Promedio LATAM');
-            if(pais !== 'Todos') dProv = dProv.filter(d => d.Pais === pais);
+            const currentSelPais = document.getElementById('filtroPais');
+            const currentSelProv = document.getElementById('filtroProvincia');
+            const pais = currentSelPais.value;
             
-            const provs = ['Todas', ...new Set(dProv.map(d=>d.Provincia_Dpto).filter(Boolean))].sort();
-            selProv.innerHTML = provs.map(p => `<option value="${p}">${p==='Todas'?'Todas las Zonas Subnacionales':p}</option>`).join('');
+            // 1. Si está en "Global LATAM", el filtro subnacional se bloquea a "Todas"
+            if (pais === 'Todos') {
+                currentSelProv.innerHTML = '<option value="Todas">Todas las Zonas</option>';
+                currentSelProv.value = 'Todas';
+                currentSelProv.disabled = true; // Deshabilita el click
+                return;
+            }
+
+            // 2. Si se eligió un país específico, desbloqueamos y buscamos sus estados
+            currentSelProv.disabled = false;
+            let dProv = globalData.filter(d => d.Pais === pais);
+            
+            // Extraer provincias únicas, filtrando las que digan "Nacional" o estén vacías (ya que "Todas" cubre lo nacional)
+            const provsUnicas = [...new Set(dProv.map(d => d.Provincia_Dpto).filter(p => p && !p.toLowerCase().includes('nacional')))].sort();
+            
+            // 3. Si el país no tiene estados específicos cargados, dejamos solo "Todas las Zonas"
+            if (provsUnicas.length === 0) {
+                currentSelProv.innerHTML = '<option value="Todas">Todas las Zonas</option>';
+            } else {
+                // 4. Si tiene estados (Ej. México -> Jalisco, etc.), los agregamos
+                const provs = ['Todas', ...provsUnicas];
+                currentSelProv.innerHTML = provs.map(p => `<option value="${p}">${p==='Todas'?'Todas las Zonas':p}</option>`).join('');
+            }
+            
+            currentSelProv.value = 'Todas'; // Valor por defecto al cambiar de país
         }
 
         function actualizarDSS() {
-            const fp = selPais.value;
-            const fpr = selProv.value;
-            const fa = selAnio.value;
+            const fp = document.getElementById('filtroPais').value;
+            const fpr = document.getElementById('filtroProvincia').value;
+            const fa = document.getElementById('filtroAnio').value;
 
             const datosCrudos = globalData.filter(d => d.Pais !== 'Promedio LATAM');
             const datosFiltrados = datosCrudos.filter(d => {
-                return (fp === 'Todos' || d.Pais === fp) &&
-                       (fpr === 'Todas' || d.Provincia_Dpto === fpr) &&
-                       (fa === 'Todos' || String(d.Anio) === String(fa));
+                // Lógica de filtrado flexible que respeta la cascada
+                const matchPais = (fp === 'Todos' || d.Pais === fp);
+                const matchProv = (fpr === 'Todas' || d.Provincia_Dpto === fpr);
+                const matchAnio = (fa === 'Todos' || String(d.Anio) === String(fa));
+                return matchPais && matchProv && matchAnio;
             });
 
             const promedios = globalData.filter(d => d.Pais === 'Promedio LATAM');
@@ -564,9 +649,8 @@
         }
 
         function renderTabla(datos) {
-            const limite = 150; // Ampliamos a 150 para que se vea más data
+            const limite = 150; 
             const filas = datos.slice(0, limite); 
-            document.getElementById('tablaCount').innerText = `${filas.length} de ${datos.length} reg`;
             const tb = document.getElementById('tablaBody');
             
             if(!filas.length) { tb.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center">No hay datos en esta vista.</td></tr>`; return; }
@@ -602,7 +686,6 @@
             `}).join('');
         }
 
-        window.addEventListener('DOMContentLoaded', initSystem);
     </script>
 </body>
 </html>
