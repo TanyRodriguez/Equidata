@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EquiData Global - Decision Support System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .chart-container { position: relative; height: 100%; width: 100%; min-height: 250px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        .alert-pulse { animation: pulse-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-sm">
+
+    <aside class="w-64 glass-panel flex flex-col border-r border-slate-700/50 hidden md:flex z-20 shadow-2xl">
+        <div class="p-6 border-b border-slate-700/50 flex items-center gap-3">
+            <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20">
+                <i data-lucide="shield-check" class="text-white w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">EquiData</h1>
+                <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Global DSS</p>
+            </div>
+        </div>
+
+        <div class="p-5 flex-grow overflow-y-auto space-y-6">
+            
+            <div class="bg-slate-800/60 border border-slate-600/50 p-4 rounded-xl space-y-3 shadow-inner">
+                <h4 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                    <i data-lucide="database" class="w-4 h-4 text-indigo-400"></i> Gestor de Datos
+                </h4>
+                
+                <div id="statusBadge" class="inline-flex items-center gap-2 text-[10px] bg-slate-700 text-slate-400 px-2 py-1.5 rounded-lg border border-slate-600 w-full justify-center transition-all">
+                    <span class="w-2 h-2 rounded-full bg-slate-500"></span> Conectando...
+                </div>
+                
+                <input type="file" id="fileInput" accept=".csv" class="hidden" />
+                <button id="uploadBtn" class="w-full bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg transition-colors border border-indigo-500/50 flex items-center justify-center gap-2 shadow-lg">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Cargar CSV Temporal
+                </button>
+                
+                <button id="resetBtn" class="w-full bg-slate-700 hover:bg-rose-900/50 hover:text-rose-300 text-slate-300 text-xs font-bold py-2 rounded-lg transition-all border border-slate-600 hover:border-rose-500/50 flex items-center justify-center gap-2 hidden">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Restaurar Base Inicial
+                </button>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Parámetros Estratégicos</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 uppercase">Región / País</label>
+                        <select id="filtroPais" class="w-full bg-slate-800/50 border border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                            <option value="Todos">Global LATAM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 uppercase">Zoom-In Subnacional</label>
+                        <select id="filtroProvincia" class="w-full bg-slate-800/50 border border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                            <option value="Todas">Todas las Zonas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 uppercase">Periodo</label>
+                        <select id="filtroAnio" class="w-full bg-slate-800/50 border border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                            <option value="Todos">Histórico Completo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-700/50 text-center">
+            <p class="text-[10px] text-slate-500">Módulo Analítico Avanzado v2.4</p>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-900">
+        
+        <header class="md:hidden glass-panel p-4 flex justify-between items-center z-20">
+            <h1 class="font-bold text-lg text-white">EquiData DSS</h1>
+            <button class="text-slate-300"><i data-lucide="menu"></i></button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6">
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                
+                <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-indigo-500/50 transition-colors">
+                    <div class="absolute -right-6 -top-6 opacity-10 group-hover:scale-110 transition-transform"><i data-lucide="activity" class="w-32 h-32 text-indigo-500"></i></div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Tasa Prevalencia</p>
+                    <h3 id="kpiPrevalencia" class="text-3xl font-black text-white mb-1">--%</h3>
+                    <p class="text-[10px] text-slate-500">Exposición (OMS/Encuestas)</p>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-rose-500/50 transition-colors border-b-2 border-b-rose-500">
+                    <div class="absolute -right-6 -top-6 opacity-10 group-hover:scale-110 transition-transform"><i data-lucide="skull" class="w-32 h-32 text-rose-500"></i></div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Impacto Letal</p>
+                    <h3 id="kpiLetalidad" class="text-3xl font-black text-rose-400 mb-1">--</h3>
+                    <p class="text-[10px] text-slate-500">Femicidios Acumulados</p>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group transition-colors">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Variación Interanual (Δ)</p>
+                    <div class="flex items-end gap-2 mb-1">
+                        <h3 id="kpiTendencia" class="text-3xl font-black text-white">--%</h3>
+                        <span id="kpiTendenciaIcon"></span>
+                    </div>
+                    <p id="txtTendencia" class="text-[10px] text-slate-500">Respecto al periodo anterior</p>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-emerald-500/50 transition-colors">
+                    <div class="absolute -right-6 -top-6 opacity-10 group-hover:scale-110 transition-transform"><i data-lucide="scale" class="w-32 h-32 text-emerald-500"></i></div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Respuesta Institucional</p>
+                    <h3 id="kpiRespuesta" class="text-3xl font-black text-emerald-400 mb-1">--%</h3>
+                    <p class="text-[10px] text-slate-500">Atenciones vs Emergencias</p>
+                </div>
+
+                <div id="cardAlerta" class="glass-panel p-5 rounded-2xl relative overflow-hidden transition-all duration-500">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1 flex justify-between">
+                        Zonas en Riesgo <i id="iconAlerta" data-lucide="siren" class="w-4 h-4 text-slate-500"></i>
+                    </p>
+                    <h3 id="kpiAlertas" class="text-3xl font-black text-white mb-1">0</h3>
+                    <p id="txtAlerta" class="text-[10px] text-slate-500">Zonas con Δ > 20%</p>
+                </div>
+
+            </div>
+
+            <div class="bg-gradient-to-r from-indigo-900/80 to-slate-900/80 border border-indigo-500/30 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row gap-4 items-center">
+                <div class="p-4 bg-indigo-500/20 rounded-full animate-pulse shrink-0">
+                    <i data-lucide="brain-circuit" class="w-8 h-8 text-indigo-400"></i>
+                </div>
+                <div class="w-full">
+                    <h2 class="text-sm font-bold text-indigo-300 uppercase tracking-widest mb-2">Interpretación del Modelo DSS</h2>
+                    <ul id="panelInsights" class="text-sm text-slate-300 space-y-2 list-disc ml-5 marker:text-indigo-500">
+                        <li>Cargando motor de datos...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <div class="glass-panel rounded-2xl p-5 lg:col-span-2 flex flex-col">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4 text-indigo-400"></i> Evolución de la Violencia vs Brecha Global</h3>
+                            <p class="text-xs text-slate-400">Comparativa temporal de prevalencias (Línea) frente al promedio LATAM.</p>
+                        </div>
+                    </div>
+                    <div class="chart-container flex-grow">
+                        <canvas id="chartEvolucion"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-5 flex flex-col">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1"><i data-lucide="pie-chart" class="w-4 h-4 text-pink-400"></i> Distribución por Tipo</h3>
+                    <p class="text-xs text-slate-400 mb-4">Composición de las denuncias/casos.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="chartTipos"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-5 lg:col-span-1 flex flex-col">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1"><i data-lucide="target" class="w-4 h-4 text-amber-400"></i> Vulnerabilidad Demográfica</h3>
+                    <p class="text-xs text-slate-400 mb-4">Grupos de edad afectados.</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="chartEdades"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-5 lg:col-span-2 flex flex-col">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="git-merge" class="w-4 h-4 text-emerald-400"></i> Matriz de Correlación Socio-Económica</h3>
+                            <p class="text-xs text-slate-400">Relación entre indicadores contextuales (eje X) y prevalencia de violencia (eje Y).</p>
+                        </div>
+                    </div>
+                    <div class="chart-container flex-grow flex items-center justify-center bg-slate-800/30 rounded-lg border border-slate-700/50">
+                        <canvas id="chartCorrelacion"></canvas>
+                        <div id="scatterOverlay" class="absolute inset-0 flex items-center justify-center text-slate-500 text-xs hidden">
+                            Requiere datos sociodemográficos y de violencia simultáneos para el mismo año.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="table" class="w-4 h-4 text-slate-400"></i> Repositorio de Datos (Data Lake)</h3>
+                    <span id="tablaCount" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full border border-slate-600">0 registros</span>
+                </div>
+                <div class="overflow-x-auto max-h-[300px]">
+                    <table class="w-full text-left whitespace-nowrap text-xs text-slate-300">
+                        <thead class="bg-slate-900/80 text-slate-400 uppercase font-semibold sticky top-0 z-10 backdrop-blur-md">
+                            <tr>
+                                <th class="px-6 py-3">País / Provincia</th>
+                                <th class="px-6 py-3 text-center">Periodo</th>
+                                <th class="px-6 py-3">Edad y Tipo</th>
+                                <th class="px-6 py-3">Categoría / Fuente</th>
+                                <th class="px-6 py-3 text-right">Valor</th>
+                                <th class="px-6 py-3 text-center">Δ Tendencia</th>
+                                <th class="px-6 py-3 text-center">Alerta Sistema</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaBody" class="divide-y divide-slate-800/50">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+
+        let defaultGlobalData = []; 
+        let globalData = [];        
+
+        const selPais = document.getElementById('filtroPais');
+        const selProv = document.getElementById('filtroProvincia');
+        const selAnio = document.getElementById('filtroAnio');
+        let chartEvRef, chartTiposRef, chartEdadRef, chartCorrRef;
+
+        // --- SISTEMA HÍBRIDO DE CARGA DE DATOS ---
+        function cargarCSVAutomatico() {
+            const rutaArchivoCSV = 'equidata_latam_inteligente.csv'; 
+
+            fetch(rutaArchivoCSV)
+                .then(response => {
+                    if (!response.ok) throw new Error("No se pudo cargar el archivo CSV");
+                    return response.text();
+                })
+                .then(textoCSV => {
+                    const csvData = parseCSVRobust(textoCSV); 
+                    if(csvData.length > 0) {
+                        defaultGlobalData = [...csvData]; 
+                        globalData = [...csvData];        
+                        initSystem(); 
+                        actualizarInterfaz('default', csvData.length);
+                    } else {
+                        throw new Error("Archivo vacío");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error al cargar el CSV automáticamente:", error);
+                    document.getElementById('panelInsights').innerHTML = `<li><span class="text-amber-400 font-bold">Aviso:</span> No se detectó la base de datos automática. Por favor, sube un CSV manualmente usando el botón izquierdo.</li>`;
+                    actualizarInterfaz('error', 0);
+                });
+        }
+
+        document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+        
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const csvData = parseCSVRobust(ev.target.result);
+                if(csvData.length > 0) {
+                    globalData = [...csvData]; 
+                    initSystem();
+                    actualizarInterfaz('temp', csvData.length);
+                } else {
+                    alert("Error: El archivo temporal está vacío o corrupto.");
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if(defaultGlobalData.length > 0) {
+                globalData = [...defaultGlobalData]; 
+                document.getElementById('fileInput').value = ''; 
+                initSystem();
+                actualizarInterfaz('default', globalData.length);
+            } else {
+                cargarCSVAutomatico();
+            }
+        });
+
+        function actualizarInterfaz(estado, count) {
+            const badge = document.getElementById('statusBadge');
+            const resetBtn = document.getElementById('resetBtn');
+            document.getElementById('tablaCount').innerText = `${count} registros activos`;
+
+            if(estado === 'default') {
+                badge.className = "inline-flex items-center gap-2 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1.5 rounded-lg border border-emerald-500/30 w-full justify-center transition-all";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Matriz Inicial Activa`;
+                resetBtn.classList.add('hidden');
+            } else if (estado === 'temp') {
+                badge.className = "inline-flex items-center gap-2 text-[10px] bg-amber-500/20 text-amber-400 px-2 py-1.5 rounded-lg border border-amber-500/30 w-full justify-center transition-all";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Modo Datos Temporales`;
+                resetBtn.classList.remove('hidden');
+            } else {
+                badge.className = "inline-flex items-center gap-2 text-[10px] bg-rose-500/20 text-rose-400 px-2 py-1.5 rounded-lg border border-rose-500/30 w-full justify-center transition-all";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> Sin Datos / Error`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', cargarCSVAutomatico);
+
+        function parseCSVRobust(texto) {
+            const result = [];
+            const lines = texto.split(/\r?\n/);
+            if(lines.length < 2) return [];
+            
+            const headers = lines[0].split(',').map(h => h.replace(/(^"|"$)/g, '').trim());
+            
+            for(let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if(!line) continue;
+                
+                let row = [];
+                let inQuotes = false;
+                let currentVal = '';
+                
+                for(let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    if(char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if(char === ',' && !inQuotes) {
+                        row.push(currentVal);
+                        currentVal = '';
+                    } else {
+                        currentVal += char;
+                    }
+                }
+                row.push(currentVal); 
+                
+                let obj = {};
+                headers.forEach((h, idx) => {
+                    let v = row[idx] ? row[idx].replace(/(^"|"$)/g, '').trim() : '';
+                    if(['Valor', 'Anio', 'Mes', 'Tendencia_%'].includes(h)) {
+                        obj[h] = (v !== '' && !isNaN(parseFloat(v))) ? parseFloat(v) : null;
+                    } else {
+                        obj[h] = v;
+                    }
+                });
+                
+                if(obj.Pais && obj.Pais !== '') {
+                    result.push(obj);
+                }
+            }
+            return result;
+        }
+
+        function initSystem() {
+            poblarFiltros();
+            actualizarDSS();
+
+            selPais.replaceWith(selPais.cloneNode(true));
+            selProv.replaceWith(selProv.cloneNode(true));
+            selAnio.replaceWith(selAnio.cloneNode(true));
+            
+            const newSelPais = document.getElementById('filtroPais');
+            const newSelProv = document.getElementById('filtroProvincia');
+            const newSelAnio = document.getElementById('filtroAnio');
+
+            // Cuando cambia el país, actualizamos las provincias disponibles en cascada
+            newSelPais.addEventListener('change', () => { poblarProvincia(); actualizarDSS(); });
+            newSelProv.addEventListener('change', actualizarDSS);
+            newSelAnio.addEventListener('change', actualizarDSS);
+        }
+
+        function poblarFiltros() {
+            const baseData = globalData.filter(d => d.Pais !== 'Promedio LATAM');
+            
+            const paisesUnicos = [...new Set(baseData.map(d=>d.Pais).filter(Boolean))].sort();
+            const aniosUnicos = [...new Set(baseData.map(d=>d.Anio).filter(Boolean))].sort((a,b)=>b-a);
+            
+            const paises = ['Todos', ...paisesUnicos];
+            const anios = ['Todos', ...aniosUnicos];
+            
+            const currentSelPais = document.getElementById('filtroPais');
+            const currentSelAnio = document.getElementById('filtroAnio');
+
+            currentSelPais.innerHTML = paises.map(p => `<option value="${p}">${p==='Todos'?'Global LATAM':p}</option>`).join('');
+            currentSelAnio.innerHTML = anios.map(a => `<option value="${a}">${a==='Todos'?'Histórico Completo':a}</option>`).join('');
+            
+            currentSelPais.value = 'Todos';
+            currentSelAnio.value = 'Todos';
+            
+            poblarProvincia(); // Llamamos a la cascada inicial
+        }
+
+        // --- LÓGICA DE CASCADA ESTRICTA PARA PROVINCIAS ---
+        function poblarProvincia() {
+            const currentSelPais = document.getElementById('filtroPais');
+            const currentSelProv = document.getElementById('filtroProvincia');
+            const pais = currentSelPais.value;
+            
+            // 1. Si está en "Global LATAM", el filtro subnacional se bloquea a "Todas"
+            if (pais === 'Todos') {
+                currentSelProv.innerHTML = '<option value="Todas">Todas las Zonas</option>';
+                currentSelProv.value = 'Todas';
+                currentSelProv.disabled = true; // Deshabilita el click
+                return;
+            }
+
+            // 2. Si se eligió un país específico, desbloqueamos y buscamos sus estados
+            currentSelProv.disabled = false;
+            let dProv = globalData.filter(d => d.Pais === pais);
+            
+            // Extraer provincias únicas, filtrando las que digan "Nacional" o estén vacías (ya que "Todas" cubre lo nacional)
+            const provsUnicas = [...new Set(dProv.map(d => d.Provincia_Dpto).filter(p => p && !p.toLowerCase().includes('nacional')))].sort();
+            
+            // 3. Si el país no tiene estados específicos cargados, dejamos solo "Todas las Zonas"
+            if (provsUnicas.length === 0) {
+                currentSelProv.innerHTML = '<option value="Todas">Todas las Zonas</option>';
+            } else {
+                // 4. Si tiene estados (Ej. México -> Jalisco, etc.), los agregamos
+                const provs = ['Todas', ...provsUnicas];
+                currentSelProv.innerHTML = provs.map(p => `<option value="${p}">${p==='Todas'?'Todas las Zonas':p}</option>`).join('');
+            }
+            
+            currentSelProv.value = 'Todas'; // Valor por defecto al cambiar de país
+        }
+
+        function actualizarDSS() {
+            const fp = document.getElementById('filtroPais').value;
+            const fpr = document.getElementById('filtroProvincia').value;
+            const fa = document.getElementById('filtroAnio').value;
+
+            const datosCrudos = globalData.filter(d => d.Pais !== 'Promedio LATAM');
+            const datosFiltrados = datosCrudos.filter(d => {
+                // Lógica de filtrado flexible que respeta la cascada
+                const matchPais = (fp === 'Todos' || d.Pais === fp);
+                const matchProv = (fpr === 'Todas' || d.Provincia_Dpto === fpr);
+                const matchAnio = (fa === 'Todos' || String(d.Anio) === String(fa));
+                return matchPais && matchProv && matchAnio;
+            });
+
+            const promedios = globalData.filter(d => d.Pais === 'Promedio LATAM');
+            const dataConBenchmark = [...datosFiltrados, ...promedios];
+
+            calcularKPIs(datosFiltrados);
+            generarInsightsAlgoritmicos(datosFiltrados);
+            renderGraficos(dataConBenchmark, fp);
+            renderTabla(datosFiltrados);
+        }
+
+        function calcularKPIs(datos) {
+            const dPrev = datos.filter(d => typeof d.Valor === 'number' && d.Categoria_KPI && d.Categoria_KPI.includes('Prevalencia'));
+            const prev = dPrev.length ? (dPrev.reduce((s,d)=>s+d.Valor,0)/dPrev.length).toFixed(1) : '--';
+            document.getElementById('kpiPrevalencia').innerText = prev !== '--' ? `${prev}%` : '--';
+
+            const dLetal = datos.filter(d => typeof d.Valor === 'number' && d.Tipo_Violencia && d.Tipo_Violencia.toLowerCase().includes('letal'));
+            const letal = dLetal.reduce((s,d)=>s+d.Valor,0);
+            document.getElementById('kpiLetalidad').innerText = letal > 0 ? letal.toLocaleString() : '--';
+
+            const dTen = datos.filter(d => typeof d['Tendencia_%'] === 'number');
+            const tend = dTen.length ? (dTen.reduce((s,d)=>s+d['Tendencia_%'],0)/dTen.length).toFixed(1) : '--';
+            const elTen = document.getElementById('kpiTendencia');
+            const iconTen = document.getElementById('kpiTendenciaIcon');
+            
+            if(tend !== '--') {
+                const tVal = parseFloat(tend);
+                elTen.innerText = `${tVal>0?'+':''}${tVal}%`;
+                if(tVal > 5) { elTen.className="text-3xl font-black text-rose-400"; iconTen.innerHTML = '<i data-lucide="trending-up" class="w-6 h-6 text-rose-400"></i>'; }
+                else if (tVal < -5) { elTen.className="text-3xl font-black text-emerald-400"; iconTen.innerHTML = '<i data-lucide="trending-down" class="w-6 h-6 text-emerald-400"></i>'; }
+                else { elTen.className="text-3xl font-black text-slate-300"; iconTen.innerHTML = '<i data-lucide="minus" class="w-6 h-6 text-slate-400"></i>'; }
+            } else { elTen.innerText = '--%'; elTen.className="text-3xl font-black text-white"; iconTen.innerHTML = ''; }
+
+            const dAten = datos.filter(d => d.Categoria_KPI && d.Categoria_KPI.includes('Respuesta Institucional')).reduce((s,d)=>s+(d.Valor||0),0);
+            const dEmer = datos.filter(d => d.Categoria_KPI && d.Categoria_KPI.includes('Alertas Tempranas')).reduce((s,d)=>s+(d.Valor||0),0);
+            
+            if(dEmer > 0 && dAten > 0) {
+                const tasa = ((dAten / dEmer) * 100).toFixed(0);
+                document.getElementById('kpiRespuesta').innerText = `${tasa}%`;
+            } else {
+                document.getElementById('kpiRespuesta').innerText = 'N/A';
+            }
+
+            const alertas = datos.filter(d => d.Alerta_Riesgo && d.Alerta_Riesgo.includes('CRÍTICA')).length;
+            const cAlerta = document.getElementById('cardAlerta');
+            document.getElementById('kpiAlertas').innerText = alertas;
+            
+            if(alertas > 0) {
+                cAlerta.className = "glass-panel p-5 rounded-2xl relative overflow-hidden transition-all duration-500 border border-rose-500/50 alert-pulse";
+                document.getElementById('kpiAlertas').className = "text-3xl font-black text-rose-400 mb-1";
+                document.getElementById('iconAlerta').className = "w-4 h-4 text-rose-400";
+            } else {
+                cAlerta.className = "glass-panel p-5 rounded-2xl relative overflow-hidden transition-all duration-500";
+                document.getElementById('kpiAlertas').className = "text-3xl font-black text-white mb-1";
+                document.getElementById('iconAlerta').className = "w-4 h-4 text-slate-500";
+            }
+            lucide.createIcons();
+        }
+
+        function generarInsightsAlgoritmicos(datos) {
+            let insights = [];
+            const panel = document.getElementById('panelInsights');
+
+            const criticas = datos.filter(d => d.Alerta_Riesgo && d.Alerta_Riesgo.includes('CRÍTICA'));
+            if(criticas.length > 0) {
+                const peor = criticas.sort((a,b) => b['Tendencia_%'] - a['Tendencia_%'])[0];
+                insights.push(`<span class="text-rose-400 font-bold">ALERTA ROJA:</span> Incremento crítico del <b class="text-white">+${peor['Tendencia_%']}%</b> en ${peor.Tipo_Violencia || peor.Indicador} en ${peor.Provincia_Dpto !== 'Nacional'?peor.Provincia_Dpto:peor.Pais} (${peor.Anio}).`);
+            }
+
+            const dAten = datos.filter(d => d.Categoria_KPI && d.Categoria_KPI.includes('Respuesta Institucional')).reduce((s,d)=>s+(d.Valor||0),0);
+            const dEmer = datos.filter(d => d.Categoria_KPI && d.Categoria_KPI.includes('Alertas Tempranas')).reduce((s,d)=>s+(d.Valor||0),0);
+            if(dEmer > 0 && dAten > 0) {
+                const tasa = (dAten / dEmer) * 100;
+                if(tasa < 50) insights.push(`<span class="text-amber-400 font-bold">BRECHA DE CAPACIDAD:</span> El sistema solo logra responder al <b class="text-white">${tasa.toFixed(1)}%</b> de las llamadas de emergencia reportadas.`);
+                else insights.push(`<span class="text-emerald-400 font-bold">CAPACIDAD ACEPTABLE:</span> Se atiende institucionalmente al <b class="text-white">${tasa.toFixed(1)}%</b> de las emergencias.`);
+            }
+
+            const edades = {};
+            datos.forEach(d => { if(d.Grupo_Edad && d.Grupo_Edad !== 'Todas las edades' && typeof d.Valor === 'number') edades[d.Grupo_Edad] = (edades[d.Grupo_Edad]||0) + d.Valor; });
+            const eKeys = Object.keys(edades);
+            if(eKeys.length > 0) {
+                const eMax = eKeys.reduce((a,b) => edades[a] > edades[b] ? a : b);
+                insights.push(`El grupo demográfico más vulnerable en la selección es: <b class="text-white">${eMax}</b>.`);
+            }
+
+            if(insights.length === 0) insights.push("Los datos muestran niveles estables en la selección actual sin picos atípicos registrados.");
+            
+            panel.innerHTML = insights.map(i => `<li>${i}</li>`).join('');
+        }
+
+        function renderGraficos(datos, paisSel) {
+            const mapLoc = {}, mapGlob = {};
+            datos.forEach(d => {
+                if(typeof d.Valor !== 'number' || d.Valor > 100) return; 
+                const ejeX = d.Mes ? `${d.Anio}-M${d.Mes}` : `${d.Anio}`;
+                if(d.Pais === 'Promedio LATAM') {
+                    mapGlob[ejeX] = (mapGlob[ejeX]||0) + d.Valor;
+                } else {
+                    mapLoc[ejeX] = (mapLoc[ejeX]||0) + d.Valor;
+                }
+            });
+
+            const labelsEv = [...new Set([...Object.keys(mapLoc), ...Object.keys(mapGlob)])].sort();
+            const dataLoc = labelsEv.map(l => mapLoc[l] || null);
+            const dataGlob = labelsEv.map(l => mapGlob[l] || null);
+
+            const ctxEv = document.getElementById('chartEvolucion').getContext('2d');
+            if(chartEvRef) chartEvRef.destroy();
+            chartEvRef = new Chart(ctxEv, {
+                type: 'line',
+                data: {
+                    labels: labelsEv.length ? labelsEv : ['Sin datos'],
+                    datasets: [
+                        { label: 'Local (Selección)', data: dataLoc, borderColor: '#818cf8', backgroundColor: 'rgba(129, 140, 248, 0.2)', fill: true, tension: 0.4 },
+                        { label: 'Benchmark Global LATAM', data: dataGlob, borderColor: '#94a3b8', borderDash: [5,5], tension: 0.4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#cbd5e1' } } }, scales: { x: { ticks: { color: '#64748b' }, grid: { display: false } }, y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } } } }
+            });
+
+            const mapTipos = {};
+            datos.filter(d=>d.Pais!=='Promedio LATAM' && d.Tipo_Violencia && d.Tipo_Violencia !== 'Socioeconómico').forEach(d => {
+                mapTipos[d.Tipo_Violencia] = (mapTipos[d.Tipo_Violencia]||0) + (d.Valor||1);
+            });
+            const ctxTipos = document.getElementById('chartTipos').getContext('2d');
+            if(chartTiposRef) chartTiposRef.destroy();
+            chartTiposRef = new Chart(ctxTipos, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(mapTipos),
+                    datasets: [{ data: Object.values(mapTipos), backgroundColor: ['#ec4899', '#8b5cf6', '#3b82f6', '#f59e0b', '#10b981'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', font: {size: 10} } } } }
+            });
+
+            const mapEdades = {};
+            datos.filter(d=>d.Pais!=='Promedio LATAM' && d.Grupo_Edad && d.Grupo_Edad !== 'Todas las edades' && d.Grupo_Edad !== 'Promedio').forEach(d => {
+                mapEdades[d.Grupo_Edad] = (mapEdades[d.Grupo_Edad]||0) + (d.Valor||1);
+            });
+            const ctxEdad = document.getElementById('chartEdades').getContext('2d');
+            if(chartEdadRef) chartEdadRef.destroy();
+            chartEdadRef = new Chart(ctxEdad, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(mapEdades),
+                    datasets: [{ label: 'Volumen', data: Object.values(mapEdades), backgroundColor: '#fbbf24', borderRadius: 4 }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1e293b' }, ticks:{color:'#64748b'} }, y: { grid: { display: false }, ticks:{color:'#cbd5e1'} } } }
+            });
+
+            let scatterData = [];
+            const overlay = document.getElementById('scatterOverlay');
+            
+            const agrupadoPorPaisAnio = {};
+            datos.filter(d=>d.Pais!=='Promedio LATAM').forEach(d => {
+                const k = `${d.Pais}-${d.Anio}`;
+                if(!agrupadoPorPaisAnio[k]) agrupadoPorPaisAnio[k] = { econ: [], viol: [] };
+                if(d.Categoria_KPI && d.Categoria_KPI.includes('Correlación Socio')) agrupadoPorPaisAnio[k].econ.push(d.Valor);
+                else if(typeof d.Valor === 'number' && d.Valor <= 100) agrupadoPorPaisAnio[k].viol.push(d.Valor); 
+            });
+
+            Object.keys(agrupadoPorPaisAnio).forEach(k => {
+                const g = agrupadoPorPaisAnio[k];
+                if(g.econ.length > 0 && g.viol.length > 0) {
+                    const x = g.econ.reduce((a,b)=>a+b,0)/g.econ.length;
+                    const y = g.viol.reduce((a,b)=>a+b,0)/g.viol.length;
+                    scatterData.push({x, y, pais: k.split('-')[0]});
+                }
+            });
+
+            const ctxCorr = document.getElementById('chartCorrelacion').getContext('2d');
+            if(chartCorrRef) chartCorrRef.destroy();
+            
+            if(scatterData.length > 0) {
+                overlay.classList.add('hidden');
+                chartCorrRef = new Chart(ctxCorr, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Países/Años',
+                            data: scatterData,
+                            backgroundColor: '#34d399',
+                            borderColor: '#059669',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (ctx) => `${ctx.raw.pais}: Econ(${ctx.raw.x.toFixed(1)}) Violencia(${ctx.raw.y.toFixed(1)}%)` } }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Indicador Socioeconómico (Eje X)', color: '#94a3b8' }, grid: { color: '#1e293b' }, ticks:{color:'#64748b'} },
+                            y: { title: { display: true, text: 'Prevalencia Violencia (%) (Eje Y)', color: '#94a3b8' }, grid: { color: '#1e293b' }, ticks:{color:'#64748b'} }
+                        }
+                    }
+                });
+            } else {
+                overlay.classList.remove('hidden');
+                chartCorrRef = new Chart(ctxCorr, { type: 'scatter', data: { datasets: [] }, options: { scales: { x: {display:false}, y: {display:false} } } });
+            }
+        }
+
+        function renderTabla(datos) {
+            const limite = 150; 
+            const filas = datos.slice(0, limite); 
+            const tb = document.getElementById('tablaBody');
+            
+            if(!filas.length) { tb.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center">No hay datos en esta vista.</td></tr>`; return; }
+
+            tb.innerHTML = filas.map(f => {
+                let p = f.Anio; if(f.Mes) p += `/M${String(f.Mes).padStart(2,'0')}`;
+                
+                let tStr = '-'; let tCol = '';
+                if(typeof f['Tendencia_%'] === 'number') {
+                    const tv = f['Tendencia_%'];
+                    tStr = `${tv>0?'+':''}${tv}%`;
+                    if(tv > 5) tCol = 'text-rose-400 font-bold'; else if(tv < -5) tCol = 'text-emerald-400 font-bold';
+                }
+
+                let aHtml = '-';
+                if(f.Alerta_Riesgo) {
+                    if(f.Alerta_Riesgo.includes('CRÍTICA')) aHtml = `<span class="px-2 py-1 bg-rose-500/20 text-rose-400 rounded border border-rose-500/30">🔴 CRÍTICA</span>`;
+                    else if(f.Alerta_Riesgo.includes('ADVERTENCIA')) aHtml = `<span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded border border-amber-500/30">🟠 ALERTA</span>`;
+                    else if(f.Alerta_Riesgo.includes('MEJORA')) aHtml = `<span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded border border-emerald-500/30">🟢 MEJORA</span>`;
+                    else if(f.Alerta_Riesgo.includes('ESTABLE')) aHtml = `<span class="px-2 py-1 bg-slate-500/20 text-slate-300 rounded border border-slate-500/30">🟡 ESTABLE</span>`;
+                }
+
+                return `
+                <tr class="hover:bg-slate-800/50 transition-colors">
+                    <td class="px-6 py-3"><div class="font-bold text-white">${f.Pais}</div><div class="text-[10px] text-slate-500">${f.Provincia_Dpto}</div></td>
+                    <td class="px-6 py-3 text-center font-mono text-[10px]">${p}</td>
+                    <td class="px-6 py-3"><div class="truncate max-w-[150px] text-indigo-300" title="${f.Tipo_Violencia}">${f.Tipo_Violencia}</div><div class="text-[10px] text-slate-500">${f.Grupo_Edad}</div></td>
+                    <td class="px-6 py-3"><div class="text-[10px] uppercase text-slate-400">${f.Categoria_KPI?.split('.')[1]||f.Categoria_KPI}</div><div class="text-[9px] text-slate-600">${f.Fuente}</div></td>
+                    <td class="px-6 py-3 text-right font-black text-white">${typeof f.Valor === 'number' ? f.Valor.toLocaleString() : '-'}</td>
+                    <td class="px-6 py-3 text-center ${tCol}">${tStr}</td>
+                    <td class="px-6 py-3 text-center text-[10px]">${aHtml}</td>
+                </tr>
+            `}).join('');
+        }
+
+    </script>
+</body>
+</html>
