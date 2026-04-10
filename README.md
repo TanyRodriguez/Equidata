@@ -138,9 +138,21 @@ Incluye:
 - Mapas geoespaciales  
 - Datos en tiempo real  
 - Generación automática de reportes  
+---
+
+# 🏆 Alineación con el DAT4CCIÓN
+
+Este proyecto contribuye a:
+
+✔ Uso estratégico de datos  
+✔ Desarrollo de soluciones basadas en evidencia  
+✔ Visualización accesible  
+✔ Análisis de desigualdades  
+✔ Fortalecimiento de decisiones informadas  
 
 ---
 
 # 📜 Licencia
 
 Uso académico y demostrativo.
+
