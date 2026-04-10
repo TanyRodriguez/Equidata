@@ -141,15 +141,6 @@ Incluye:
 
 ---
 
-# 👩‍💻 Autor
-
-**Tany Rodríguez**  
-
-GitHub:  
-https://github.com/TanyRodriguez
-
----
-
 # 📜 Licencia
 
 Uso académico y demostrativo.
